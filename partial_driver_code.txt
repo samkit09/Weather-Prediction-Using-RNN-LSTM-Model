@@ -60,10 +60,10 @@ y_test_temp=[]
 train_collect=train.rdd.map(lambda x:x['feature']).collect()
 test_collect=test.rdd.map(lambda x:x['feature']).collect()
 
-for i,j in zip(range(batchSize,len(train_collect)),range(batchSize,len(test_collect))):
-    X_train_temp.append(train_collect[i-batchSize:i])
+for i,j in zip(range(50,len(train_collect)),range(50,len(test_collect))):
+    X_train_temp.append(train_collect[i-50:i])
     y_train_temp.append(train_collect[i])
-    X_test_temp.append(test_collect[j-batchSize:j])
+    X_test_temp.append(test_collect[j-50:j])
     y_test_temp.append(test_collect[j])
 
 X_train=np.array(X_train_temp)
