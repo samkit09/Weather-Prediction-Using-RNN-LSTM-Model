@@ -1,0 +1,72 @@
+Cmd-1:
+number_of_epochs=10   # Set here number of epochs you want for RNN and LSTM
+
+feature_to_predict='T2M' # Set here abbreviation of feature you want to predict
+# Details of features are described below:
+	# Temperature at 2 Meters (C) (T2M)
+	# Dew/Frost Point at 2 Meters (C) (T2MDEW)
+	# Wet Bulb Temperature at 2 Meters (C) (T2MWET)
+	# Specific Humidity at 2 Meters (g/kg) (QV2M)
+	# Precipitation Corrected (mm/day) (PRECTOTCORR)
+	# Surface Pressure (kPa) (PS)
+	# Wind Speed at 10 Meters (m/s) (WS10M)
+	# Wind Direction at 10 Meters (Degrees) (WD10M)
+	# Wind Speed at 50 Meters (m/s) (WS50M)
+	# Wind Direction at 50 Meters (Degrees) (WD50M)
+	# Relative Humidity at 2 Meters (%) (RH2M)
+	# Earth Skin Temperature (C) (TS)
+
+batchSize=50 # Set here batch size neural networks need to process
+learningRate=0.01 # Set here learning rate
+hiddenLayerDimension=10 # Set here dimension of hidden layer of neural networks
+
+Cmd-2:
+from pyspark.ml.feature import MinMaxScaler,VectorAssembler
+from pyspark.sql.functions import udf,col
+from pyspark.sql.types import DoubleType
+import numpy as np
+
+Cmd-3:
+# Driver Code
+
+# Loading the data
+df=spark.read.option("header","true").option('inferSchema','true').csv('dbfs:/FileStore/tables/dataset.csv')
+
+# Select feature to predict
+df1=df.select(feature_to_predict)
+
+# Normalizing the data
+assembler=VectorAssembler().setInputCols([feature_to_predict]).setOutputCol('featurevector')
+assembled=assembler.transform(df1)
+
+scaler=MinMaxScaler().setInputCol('featurevector')
+scalerModel=scaler.fit(assembled)
+scalerModel.setOutputCol('featurescaled')
+scaled=scalerModel.transform(assembled)
+
+# Extracting values from dense vectors
+extractor_udf=udf(lambda x:float(sum(x)),DoubleType())
+transformed=scaled.withColumn('feature',extractor_udf(col('featurescaled')))
+
+# Splitting the dataset into training and testing dataset
+train, test = transformed.randomSplit([0.8,0.2],seed=500)
+
+# Splitting training and testing data into features and label to make it comfortable for supervised learning
+batchSize=50
+X_train_temp=[]
+y_train_temp=[]
+X_test_temp=[]
+y_test_temp=[]
+train_collect=train.rdd.map(lambda x:x['feature']).collect()
+test_collect=test.rdd.map(lambda x:x['feature']).collect()
+
+for i,j in zip(range(batchSize,len(train_collect)),range(batchSize,len(test_collect))):
+    X_train_temp.append(train_collect[i-batchSize:i])
+    y_train_temp.append(train_collect[i])
+    X_test_temp.append(test_collect[j-batchSize:j])
+    y_test_temp.append(test_collect[j])
+
+X_train=np.array(X_train_temp)
+y_train=np.array(y_train_temp)
+X_test=np.array(X_test_temp)
+y_test=np.array(y_test_temp)
