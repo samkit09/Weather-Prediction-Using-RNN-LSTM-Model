@@ -92,7 +92,7 @@ batchSizesList = []
 RMSEListForTrain = []
 RMSEListForTest = []
 
-#for epoch, hiddenLayerSize, learningRate, batchSize in zip(epochList, hiddenLayerSizeList, learningRateList, batchSizeList):    
+# for epoch, hiddenLayerSize, learningRate, batchSize in zip(epochList, hiddenLayerSizeList, learningRateList, batchSizeList):    
 
 for epoch in epochList:    
     for hiddenLayerSize in hiddenLayerSizeList:

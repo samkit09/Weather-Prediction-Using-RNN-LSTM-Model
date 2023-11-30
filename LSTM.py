@@ -45,11 +45,13 @@ class LSTM:
         expVal = np.exp(data)
         sigmoidVal = expVal / (1 + expVal)
         return sigmoidVal
+    
     #calculating the sigmoid derivative
     def sigmoidDerivative(self, data):
         sigmoidVal = self.sigmoid(data)
         derVal = sigmoidVal * (1 - sigmoidVal)
         return derVal
+    
     #calculating derivative of hyperbolic tangent
     def tanhDerivative(self, data):
         val = np.tanh(data)
