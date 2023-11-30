@@ -18,27 +18,24 @@ class RNN:
         self.inp_dim = x_inp.shape[1]
         # output dimension : number of output features
         self.op_dim = 1
-
-        # 
-        self.d_weight_mat = np.random.random(( self.op_dim, self.hid_layer_dim))
-        # 
+        # weight matrix
+        self.d_weight_mat = np.random.random(( self.op_dim, self.hid_layer_dim ))
+        # helper matrix used to update weight matrix
         self.updated_weight_mat = np.zeros_like(self.d_weight_mat)
-
+        # declaring variable to store state of cell after processing at each iteration in form of an array
+        self.cell_state_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim ))
+        # declaring variable to store predicted output of each iteration
+        self.predicted_outputs = np.zeros(( self.batch_size+1, self.op_dim ))
+        # declaring variable to store intermediatory hidden state value at each iteration
+        self.hid_state_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim ))
+        # declaring variable to store 
+        self.forgetg_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim ))
         # 
-        self.cell_state_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim))
+        self.inputg_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim ))
         # 
-        self.predicted_outputs = np.zeros(( self.batch_size+1, self.op_dim))
+        self.actg_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim ))
         # 
-        self.hid_state_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim))
-
-        # 
-        self.forgetg_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim))
-        # 
-        self.inputg_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim))
-        # 
-        self.actg_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim))
-        # 
-        self.outputg_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim))
+        self.outputg_vals = np.zeros(( self.batch_size+1, self.hid_layer_dim ))
 
         # 
         self.d_weight_add = 1e-9
@@ -49,12 +46,12 @@ class RNN:
 
     # Helper Function 1 - Implemention of Sigmoid activation function 
     def sigmoid(self, inp):
-        val = 1 / (1 + np.exp(-inp))
+        val = 1 / (1 + np.exp(-inp ))
         return val
 
     # Helper Function 2 - Implemention of Derivative of Sigmoid function 
     def sigmoid_der(self, inp):
-        der = self.sigmoid(inp) * (1 - self.sigmoid(inp))
+        der = self.sigmoid(inp) * (1 - self.sigmoid(inp ))
         return der
 
     # Helper Function 3 - To update weights of weight matrix
@@ -69,7 +66,7 @@ class RNN:
         # 
         for t in range(1, batch_x_inp.shape[0]):
             # 
-            self.LSTM.x_inp = np.hstack((self.hid_state_vals[t-1], batch_x_inp[t]))
+            self.LSTM.x_inp = np.hstack((self.hid_state_vals[t-1], batch_x_inp[t] ))
 
             cell_state_val, hidden_state_val, forgetg_val, inputg_val, actg_val, outputg_val = self.LSTM.fwd_pass()
 
@@ -81,7 +78,7 @@ class RNN:
             self.actg_vals[t] = actg_val
             self.outputg_vals[t] = outputg_val
             # 
-            self.predicted_outputs[t] = self.sig(np.dot(self.d_weight_mat, hidden_state_val))
+            self.predicted_outputs[t] = self.sig(np.dot(self.d_weight_mat, hidden_state_val ))
 
         return self.predicted_outputs
 
@@ -95,15 +92,15 @@ class RNN:
         hidden_state_diff = np.zeros(self.hid_layer_dim)
 
         # 
-        weight_difference = np.zeros(( self.op_dim, self.hid_layer_dim))
+        weight_difference = np.zeros(( self.op_dim, self.hid_layer_dim ))
         # 
-        total_forgetg_diff = np.zeros(( self.hid_layer_dim, self.inp_dim+self.hid_layer_dim))
+        total_forgetg_diff = np.zeros(( self.hid_layer_dim, self.inp_dim+self.hid_layer_dim ))
         # 
-        total_inputg_diff = np.zeros(( self.hid_layer_dim, self.inp_dim+self.hid_layer_dim))
+        total_inputg_diff = np.zeros(( self.hid_layer_dim, self.inp_dim+self.hid_layer_dim ))
         # 
-        total_actg_diff = np.zeros(( self.hid_layer_dim, self.inp_dim+self.hid_layer_dim))
+        total_actg_diff = np.zeros(( self.hid_layer_dim, self.inp_dim+self.hid_layer_dim ))
 
-        total_outputg_diff = np.zeros(( self.hid_layer_dim, self.inp_dim+self.hid_layer_dim))
+        total_outputg_diff = np.zeros(( self.hid_layer_dim, self.inp_dim+self.hid_layer_dim ))
 
         # 
         for t in range(self.batch_size-1, -1, -1):
@@ -112,13 +109,13 @@ class RNN:
             # 
             total_batch_error += curr_error
             # 
-            weight_difference += np.dot(np.atleast_2d(curr_error * self.derivativeSig(self.predicted_outputs[t])),
-                                        np.atleast_2d(self.hid_state_vals[t]))
+            weight_difference += np.dot(np.atleast_2d(curr_error * self.derivativeSig(self.predicted_outputs[t] )),
+                                        np.atleast_2d(self.hid_state_vals[t] ))
 
             # 
             lstm_error = np.dot(curr_error, self.d_weight_mat)
             # 
-            self.LSTM.x_inp = np.hstack((self.hid_state_vals[t-1], batch_x_inp[t]))
+            self.LSTM.x_inp = np.hstack((self.hid_state_vals[t-1], batch_x_inp[t] ))
             # 
             self.LSTM.cellState = self.cell_state_vals[t]
             # 
@@ -150,19 +147,19 @@ class RNN:
         # 
         self.acualOutput = batch_y_op
         # 
-        self.cell_state_vals = np.zeros(( batch_size+1, self.hid_layer_dim))
+        self.cell_state_vals = np.zeros(( batch_size+1, self.hid_layer_dim ))
         # 
-        self.predicted_outputs = np.zeros(( batch_size+1, self.op_dim))
+        self.predicted_outputs = np.zeros(( batch_size+1, self.op_dim ))
         # 
-        self.hid_state_vals = np.zeros(( batch_size+1, self.hid_layer_dim))
+        self.hid_state_vals = np.zeros(( batch_size+1, self.hid_layer_dim ))
         # 
-        self.forgetg_vals = np.zeros(( batch_size+1, self.hid_layer_dim))
+        self.forgetg_vals = np.zeros(( batch_size+1, self.hid_layer_dim ))
         # 
-        self.inputg_vals = np.zeros(( batch_size+1, self.hid_layer_dim))
+        self.inputg_vals = np.zeros(( batch_size+1, self.hid_layer_dim ))
         # 
-        self.actg_vals = np.zeros(( batch_size+1, self.hid_layer_dim))
+        self.actg_vals = np.zeros(( batch_size+1, self.hid_layer_dim ))
         # 
-        self.outputg_vals = np.zeros(( batch_size+1, self.hid_layer_dim))
+        self.outputg_vals = np.zeros(( batch_size+1, self.hid_layer_dim ))
 
         # 
         total_test_error = 0
@@ -170,7 +167,7 @@ class RNN:
         for t in range(1, batch_size):
 
             # 
-            self.LSTM.x_inp = np.hstack((self.hid_state_vals[t-1], batch_x_inp[t]))
+            self.LSTM.x_inp = np.hstack((self.hid_state_vals[t-1], batch_x_inp[t] ))
 
             cell_state_val, hidden_state_val, forgetg_val, inputg_val, actg_val, outputg_val = self.LSTM.fwd_pass()
 
@@ -183,7 +180,7 @@ class RNN:
             self.outputg_vals[t] = outputg_val
 
             # 
-            self.predicted_outputs[t] = self.sig(np.dot(self.d_weight_mat, hidden_state_val))
+            self.predicted_outputs[t] = self.sig(np.dot(self.d_weight_mat, hidden_state_val ))
 
             curr_error = abs(self.predicted_outputs[t] - batch_y_op[t])
             total_test_error += curr_error
